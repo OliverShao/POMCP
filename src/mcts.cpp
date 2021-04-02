@@ -28,7 +28,7 @@ MCTS::PARAMS::PARAMS()
 
 MCTS::MCTS(const SIMULATOR& simulator, const PARAMS& params)
 :   Simulator(simulator),
-    Params(params),
+    Params(params), //# SearchParam
     TreeDepth(0)
 {
     VNODE::NumChildren = Simulator.GetNumActions();
@@ -149,7 +149,7 @@ void MCTS::UCTSearch()
         Status.Phase = SIMULATOR::STATUS::TREE;
         if (Params.Verbose >= 2)
         {
-            cout << "Starting simulation" << endl;
+            cout << "\nStarting simulation" << endl;
             Simulator.DisplayState(*state, cout);
         }
 
@@ -329,7 +329,7 @@ double MCTS::Rollout(STATE& state)
         int observation;
         double reward;
 
-        int action = Simulator.SelectRandom(state, History, Status);
+        int action = Simulator.SelectRandom(state, History, Status); //#Replace by Simple Policy? //Status not being used
         terminal = Simulator.Step(state, action, observation, reward);
         History.Add(action, observation);
 

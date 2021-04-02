@@ -24,7 +24,8 @@ public:
             PURE,
             LEGAL,
             SMART,
-            NUM_LEVELS
+            NUM_LEVELS,
+            SIMPLE_POLICY
         };
 
         KNOWLEDGE();
@@ -108,6 +109,10 @@ public:
 
     // Generate set of preferred actions
     virtual void GeneratePreferred(const STATE& state, const HISTORY& history, 
+        std::vector<int>& actions, const STATUS& status) const;
+
+    // Generate set of simple policy chosen actions
+    virtual void GenerateSimplePolicy(const STATE& state, const HISTORY& history, 
         std::vector<int>& actions, const STATUS& status) const;
 
     // For explicit POMDP computation only

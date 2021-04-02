@@ -3,7 +3,7 @@
 
 using namespace std;
 
-EXPERIMENT::PARAMS::PARAMS()
+EXPERIMENT::PARAMS::PARAMS() //# constructor of the struct, being called in main.cpp
 :   NumRuns(1000),
     NumSteps(100000),
     SimSteps(1000),
@@ -27,18 +27,19 @@ EXPERIMENT::EXPERIMENT(const SIMULATOR& real,
     ExpParams(expParams),
     SearchParams(searchParams)
 {
-    if (ExpParams.AutoExploration)
+    if (ExpParams.AutoExploration)//# AutoExploration default true
     {
         if (SearchParams.UseRave)
             SearchParams.ExplorationConstant = 0;
-        else
-            SearchParams.ExplorationConstant = simulator.GetRewardRange();
+        else //# UseRave default false
+            SearchParams.ExplorationConstant = simulator.GetRewardRange();//#default 20
     }
     MCTS::InitFastUCB(SearchParams.ExplorationConstant);
 }
 
 void EXPERIMENT::Run()
 {
+    cout << "In Run()\n";
     boost::timer timer;
 
     MCTS mcts(Simulator, SearchParams); //#init Monte Carlo Search Tree with Simulator
@@ -60,7 +61,7 @@ void EXPERIMENT::Run()
         double reward;
         int action = mcts.SelectAction(); //# As stated in 3.1 PO-UCT
         terminal = Real.Step(*state, action, observation, reward); //# Step Real with selected action. Step in rocksample.cpp
-
+        
         Results.Reward.Add(reward);
         undiscountedReturn += reward;
         discountedReturn += reward * discount;
@@ -136,6 +137,7 @@ void EXPERIMENT::Run()
         << ", average = " << Results.DiscountedReturn.GetMean() << endl;
     cout << "Undiscounted return = " << undiscountedReturn
         << ", average = " << Results.UndiscountedReturn.GetMean() << endl;
+    cout<<"end Run()\n";
 }
 
 void EXPERIMENT::MultiRun()
@@ -162,16 +164,16 @@ void EXPERIMENT::DiscountedReturn()
     SearchParams.MaxDepth = Simulator.GetHorizon(ExpParams.Accuracy, ExpParams.UndiscountedHorizon);
     ExpParams.SimSteps = Simulator.GetHorizon(ExpParams.Accuracy, ExpParams.UndiscountedHorizon);
     ExpParams.NumSteps = Real.GetHorizon(ExpParams.Accuracy, ExpParams.UndiscountedHorizon);
-
-    for (int i = ExpParams.MinDoubles; i <= ExpParams.MaxDoubles; i++) //# default 0 to 20
+    cout<<"MaxDepth: "<<SearchParams.MaxDepth<<" SimSteps: "<<ExpParams.SimSteps<<" NumSteps: "<<ExpParams.NumSteps<<endl; 
+    for (int i = ExpParams.MinDoubles; i <= ExpParams.MaxDoubles; i++) //# default 0 to 20, to control # of simulations
     {
         SearchParams.NumSimulations = 1 << i;
         SearchParams.NumStartStates = 1 << i;
-        if (i + ExpParams.TransformDoubles >= 0)
+        if (i + ExpParams.TransformDoubles >= 0) //# TransformDoubles Default -4
             SearchParams.NumTransforms = 1 << (i + ExpParams.TransformDoubles);
         else
             SearchParams.NumTransforms = 1;
-        SearchParams.MaxAttempts = SearchParams.NumTransforms * ExpParams.TransformAttempts;
+        SearchParams.MaxAttempts = SearchParams.NumTransforms * ExpParams.TransformAttempts; //# TransformAttempts defualt 1000
 
         Results.Clear();
         MultiRun();

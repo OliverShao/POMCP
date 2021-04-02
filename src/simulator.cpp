@@ -59,21 +59,48 @@ void SIMULATOR::GeneratePreferred(const STATE& state, const HISTORY& history,
 {
 }
 
+void SIMULATOR::GenerateSimplePolicy(const STATE& state, const HISTORY& history, 
+    std::vector<int>& actions, const STATUS& status) const
+{
+}
+
 int SIMULATOR::SelectRandom(const STATE& state, const HISTORY& history,
     const STATUS& status) const
 {
     static vector<int> actions;
+    //# TODO: Simple Policy 
+    if (Knowledge.RolloutLevel >= KNOWLEDGE::SIMPLE_POLICY)
+    {
+        actions.clear();
+        cout<<"In selectRandom Simple Policy\n";
+        GenerateSimplePolicy(state, history, actions, status);
+        if (!actions.empty()) {
+            cout<< "actions: ";
+            for (int& action: actions)
+                cout<<action<<" ";
+            cout<<"\n";
+            return actions[Random(actions.size())];
+        }
+    }
+    
 
     if (Knowledge.RolloutLevel >= KNOWLEDGE::SMART)
     {
         actions.clear();
+        cout<<"In selectRandom GeneratePreferred\n";
         GeneratePreferred(state, history, actions, status);
-        if (!actions.empty())
+        if (!actions.empty()) {
+            cout<< "actions: ";
+            for (int& action: actions)
+                cout<<action<<" ";
+            cout<<"\n";
             return actions[Random(actions.size())];
+        }
     }
         
     if (Knowledge.RolloutLevel >= KNOWLEDGE::LEGAL)
-    {
+    {   
+        cout<<"In selectRandom Legal\n";
         actions.clear();
         GenerateLegal(state, history, actions, status);
         if (!actions.empty())
@@ -115,6 +142,7 @@ void SIMULATOR::Prior(const STATE* state, const HISTORY& history,
     if (Knowledge.TreeLevel >= KNOWLEDGE::SMART)
     {
         actions.clear();
+        cout<<"in Prior\n";
         GeneratePreferred(*state, history, actions, status);
 
         for (vector<int>::const_iterator i_action = actions.begin(); i_action != actions.end(); ++i_action)

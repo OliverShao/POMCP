@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
         ("ravediscount", value<double>(&searchParams.RaveDiscount), "RAVE discount factor")
         ("raveconstant", value<double>(&searchParams.RaveConstant), "RAVE bias constant")
         ("treeknowledge", value<int>(&knowledge.TreeLevel), "Knowledge level in tree (0=Pure, 1=Legal, 2=Smart)")
-        ("rolloutknowledge", value<int>(&knowledge.RolloutLevel), "Knowledge level in rollouts (0=Pure, 1=Legal, 2=Smart)")
+        ("rolloutknowledge", value<int>(&knowledge.RolloutLevel), "Knowledge level in rollouts (0=Pure, 1=Legal, 2=Smart, 4=Simple Policy)")
         ("smarttreecount", value<int>(&knowledge.SmartTreeCount), "Prior count for preferred actions during smart tree search")
         ("smarttreevalue", value<double>(&knowledge.SmartTreeValue), "Prior value for preferred actions during smart tree search")
         ("disabletree", value<bool>(&searchParams.DisableTree), "Use 1-ply rollout action selection")
@@ -127,7 +127,6 @@ int main(int argc, char* argv[])
         cout << "Unknown problem" << endl;
         exit(1);
     }
-
 
     simulator->SetKnowledge(knowledge);
     EXPERIMENT experiment(*real, *simulator, outputfile, expParams, searchParams);

@@ -205,9 +205,9 @@ bool ROCKSAMPLE::Step(STATE& state, int action,
         }
     }
 
-    if (action > E_SAMPLE) // check
+    if (action > E_SAMPLE) // check //# make an observation
     {
-        int rock = action - E_SAMPLE - 1;
+        int rock = action - E_SAMPLE - 1; //# rock index to check
         assert(rock < NumRocks);
         observation = GetObservation(rockstate, rock);
         rockstate.Rocks[rock].Measured++;
@@ -269,7 +269,7 @@ bool ROCKSAMPLE::LocalMove(STATE& state, const HISTORY& history,
 void ROCKSAMPLE::GenerateLegal(const STATE& state, const HISTORY& history,
     vector<int>& legal, const STATUS& status) const
 {
-
+    cout<<"In generateLegal \n";
     const ROCKSAMPLE_STATE& rockstate =
         safe_cast<const ROCKSAMPLE_STATE&>(state);
 
@@ -296,11 +296,12 @@ void ROCKSAMPLE::GenerateLegal(const STATE& state, const HISTORY& history,
 void ROCKSAMPLE::GeneratePreferred(const STATE& state, const HISTORY& history,
     vector<int>& actions, const STATUS& status) const
 {
-
+    cout<<"In generatePreferred \n";
 	static const bool UseBlindPolicy = false;
 
 	if (UseBlindPolicy)
 	{
+        cout<<"Use Blind Policy\n";
 		actions.push_back(COORD::E_EAST);
 		return;
 	}
@@ -309,7 +310,7 @@ void ROCKSAMPLE::GeneratePreferred(const STATE& state, const HISTORY& history,
 	        safe_cast<const ROCKSAMPLE_STATE&>(state);
 
 	// Sample rocks with more +ve than -ve observations
-	int rock = Grid(rockstate.AgentPos);
+	int rock = Grid(rockstate.AgentPos); //return -1 if no-rock, otherwise index of rock
 	if (rock >= 0 && !rockstate.Rocks[rock].Collected)
 	{
 		int total = 0;
@@ -385,7 +386,7 @@ void ROCKSAMPLE::GeneratePreferred(const STATE& state, const HISTORY& history,
 	//   d) we never sample a rock (since we need to be sure)
 	//   e) we never move in a direction that doesn't take us closer to
 	//      either the edge of the map or an interesting rock
-	if (rockstate.AgentPos.Y + 1 < Size && north_interesting)
+	if (rockstate.AgentPos.Y + 1 < Size && north_interesting) //# TODO: replace it by check rocksate.AgentPos.Y <? rock][i].Y then 
 			actions.push_back(COORD::E_NORTH);
 
 	if (east_interesting)
@@ -398,7 +399,111 @@ void ROCKSAMPLE::GeneratePreferred(const STATE& state, const HISTORY& history,
 		actions.push_back(COORD::E_WEST);
 
 
-	for (rock = 0; rock < NumRocks; ++rock)
+	for (rock = 0; rock < NumRocks; ++rock) //# TODO: copy this part to the last of our simple policy
+	{
+		if (!rockstate.Rocks[rock].Collected    &&
+			rockstate.Rocks[rock].ProbValuable != 0.0 &&
+			rockstate.Rocks[rock].ProbValuable != 1.0 &&
+			rockstate.Rocks[rock].Measured < 5  &&
+			std::abs(rockstate.Rocks[rock].Count) < 2)
+		{
+			actions.push_back(rock + 1 + E_SAMPLE);
+		}
+	}
+}
+
+void ROCKSAMPLE::GenerateSimplePolicy(const STATE& state, const HISTORY& history,
+    vector<int>& actions, const STATUS& status) const
+{
+    cout<<"in GenerateSimplePolicy\n";
+
+    const ROCKSAMPLE_STATE& rockstate =
+	        safe_cast<const ROCKSAMPLE_STATE&>(state);
+
+	// Sample rocks with more +ve than -ve observations
+	int rock = Grid(rockstate.AgentPos); //return -1 if no-rock, otherwise index of rock
+	if (rock >= 0 && !rockstate.Rocks[rock].Collected)
+	{
+		int total = 0;
+		for (int t = 0; t < history.Size(); ++t)
+		{
+			if (history[t].Action == rock + 1 + E_SAMPLE)
+			{
+				if (history[t].Observation == E_GOOD)
+					total++;
+				if (history[t].Observation == E_BAD)
+					total--;
+			}
+		}
+		if (total > 0)
+		{
+			actions.push_back(E_SAMPLE);
+			return;
+		}
+	}
+
+    // Move agent to the most possible valuable rock
+    bool all_bad = true;
+	bool north_interesting = false;
+	bool south_interesting = false;
+	bool west_interesting  = false;
+	bool east_interesting  = false;
+    int highest_total = -1;
+    int highest_rock = -1;
+
+	for (int rock = 0; rock < NumRocks; ++rock)
+	{
+		const ROCKSAMPLE_STATE::ENTRY& entry = rockstate.Rocks[rock];
+		if (!entry.Collected)
+		{   
+            
+			int total = 0;
+			for (int t = 0; t < history.Size(); ++t)
+			{
+				if (history[t].Action == rock + 1 + E_SAMPLE)
+				{
+					if (history[t].Observation == E_GOOD)
+						total++;
+					if (history[t].Observation == E_BAD)
+						total--;
+				}
+			}
+
+			if (total >= 0)
+			{
+				all_bad = false;
+                if (highest_total < total)
+                {
+                    highest_total = total;
+                    highest_rock = rock;
+                }
+			}
+		}
+	}
+
+	// if all remaining rocks seem bad, then head east
+	if (all_bad)
+	{
+		actions.push_back(COORD::E_EAST);
+		return;
+	}
+
+    if (rockstate.AgentPos.Y + 1 < Size && RockPos[highest_rock].Y > rockstate.AgentPos.Y)  
+        actions.push_back(COORD::E_NORTH);
+
+    if (RockPos[highest_rock].X > rockstate.AgentPos.X)
+        actions.push_back(COORD::E_EAST);
+
+	if (rockstate.AgentPos.Y - 1 >= 0 && RockPos[highest_rock].Y < rockstate.AgentPos.Y)
+		actions.push_back(COORD::E_SOUTH);
+
+	if (rockstate.AgentPos.X - 1 >= 0 && RockPos[highest_rock].X < rockstate.AgentPos.X)
+		actions.push_back(COORD::E_WEST);
+
+
+
+    // Check rocks
+	for (rock = 0; rock < NumRocks; ++rock) //# TODO: copy this part to the last of our simple policy
 	{
 		if (!rockstate.Rocks[rock].Collected    &&
 			rockstate.Rocks[rock].ProbValuable != 0.0 &&
@@ -447,7 +552,7 @@ void ROCKSAMPLE::DisplayBeliefs(const BELIEF_STATE& beliefState,
 void ROCKSAMPLE::DisplayState(const STATE& state, std::ostream& ostr) const
 {
     const ROCKSAMPLE_STATE& rockstate = safe_cast<const ROCKSAMPLE_STATE&>(state);
-    ostr << endl;
+    // ostr << endl;
     for (int x = 0; x < Size + 2; x++)
         ostr << "# ";
     ostr << endl;
