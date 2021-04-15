@@ -43,6 +43,8 @@ public:
         std::vector<int>& legal, const STATUS& status) const;
     void GenerateSimplePolicy(const STATE& state, const HISTORY& history,
         std::vector<int>& legal, const STATUS& status) const;
+    void GenerateSimplePolicy_GoToNearestRock(const STATE& state, const HISTORY& history,
+        std::vector<int>& legal, const STATUS& status) const;
     virtual bool LocalMove(STATE& state, const HISTORY& history,
         int stepObservation, const STATUS& status) const;
 

@@ -39,7 +39,7 @@ EXPERIMENT::EXPERIMENT(const SIMULATOR& real,
 
 void EXPERIMENT::Run()
 {
-    cout << "In Run()\n";
+    // cout << "In Run()\n";
     boost::timer timer;
 
     MCTS mcts(Simulator, SearchParams); //#init Monte Carlo Search Tree with Simulator
@@ -104,7 +104,7 @@ void EXPERIMENT::Run()
             // This passes real state into simulator!
             // SelectRandom must only use fully observable state
             // to avoid "cheating"
-            int action = Simulator.SelectRandom(*state, history, mcts.GetStatus());
+            int action = Simulator.SelectRandom(*state, history, mcts.GetStatus(), t);
             terminal = Real.Step(*state, action, observation, reward);
 
             Results.Reward.Add(reward);
@@ -137,7 +137,7 @@ void EXPERIMENT::Run()
         << ", average = " << Results.DiscountedReturn.GetMean() << endl;
     cout << "Undiscounted return = " << undiscountedReturn
         << ", average = " << Results.UndiscountedReturn.GetMean() << endl;
-    cout<<"end Run()\n";
+    // cout<<"end Run()\n";
 }
 
 void EXPERIMENT::MultiRun()
@@ -164,7 +164,7 @@ void EXPERIMENT::DiscountedReturn()
     SearchParams.MaxDepth = Simulator.GetHorizon(ExpParams.Accuracy, ExpParams.UndiscountedHorizon);
     ExpParams.SimSteps = Simulator.GetHorizon(ExpParams.Accuracy, ExpParams.UndiscountedHorizon);
     ExpParams.NumSteps = Real.GetHorizon(ExpParams.Accuracy, ExpParams.UndiscountedHorizon);
-    cout<<"MaxDepth: "<<SearchParams.MaxDepth<<" SimSteps: "<<ExpParams.SimSteps<<" NumSteps: "<<ExpParams.NumSteps<<endl; 
+    // cout<<"MaxDepth: "<<SearchParams.MaxDepth<<" SimSteps: "<<ExpParams.SimSteps<<" NumSteps: "<<ExpParams.NumSteps<<endl; 
     for (int i = ExpParams.MinDoubles; i <= ExpParams.MaxDoubles; i++) //# default 0 to 20, to control # of simulations
     {
         SearchParams.NumSimulations = 1 << i;

@@ -37,7 +37,7 @@ public:
     void UCTSearch();
     void RolloutSearch();
 
-    double Rollout(STATE& state);
+    double Rollout(STATE& state, int simulationSteps/*enable run multiple simple policies in each simulation step*/);
 
     const BELIEF_STATE& BeliefState() const { return Root->Beliefs(); }
     const HISTORY& GetHistory() const { return History; }
@@ -65,8 +65,8 @@ private:
 
     int GreedyUCB(VNODE* vnode, bool ucb) const;
     int SelectRandom() const;
-    double SimulateV(STATE& state, VNODE* vnode);
-    double SimulateQ(STATE& state, QNODE& qnode, int action);
+    double SimulateV(STATE& state, VNODE* vnode, int step);
+    double SimulateQ(STATE& state, QNODE& qnode, int action, int step);
     void AddRave(VNODE* vnode, double totalReward);
     VNODE* ExpandNode(const STATE* state);
     void AddSample(VNODE* node, const STATE& state);

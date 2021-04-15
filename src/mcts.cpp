@@ -94,7 +94,7 @@ bool MCTS::Update(int action, int observation, double reward) //# delete old tre
 
 int MCTS::SelectAction()
 {
-    if (Params.DisableTree)
+    if (Params.DisableTree) // Once set at param flags, won't change
         RolloutSearch();
     else
         UCTSearch();
@@ -127,8 +127,8 @@ void MCTS::RolloutSearch()
 			AddSample(vnode, *state);
 		}
 		History.Add(action, observation);
-
-		delayedReward = Rollout(*state);
+        cout<<"@@in rollout search simulationSteps is "<<i<<endl;
+		delayedReward = Rollout(*state, i);
 		totalReward = immediateReward + Simulator.GetDiscount() * delayedReward;
 		Root->Child(action).Value.Add(totalReward);
 
@@ -155,7 +155,7 @@ void MCTS::UCTSearch()
 
         TreeDepth = 0;
         PeakTreeDepth = 0;
-        double totalReward = SimulateV(*state, Root);
+        double totalReward = SimulateV(*state, Root, n);
         StatTotalReward.Add(totalReward);
         StatTreeDepth.Add(PeakTreeDepth);
 
@@ -171,7 +171,7 @@ void MCTS::UCTSearch()
     DisplayStatistics(cout);
 }
 
-double MCTS::SimulateV(STATE& state, VNODE* vnode)
+double MCTS::SimulateV(STATE& state, VNODE* vnode, int step)
 {
     int action = GreedyUCB(vnode, true);
 
@@ -183,13 +183,13 @@ double MCTS::SimulateV(STATE& state, VNODE* vnode)
         AddSample(vnode, state);
 
     QNODE& qnode = vnode->Child(action);
-    double totalReward = SimulateQ(state, qnode, action);
+    double totalReward = SimulateQ(state, qnode, action, step);
     vnode->Value.Add(totalReward);
     AddRave(vnode, totalReward);
     return totalReward;
 }
 
-double MCTS::SimulateQ(STATE& state, QNODE& qnode, int action)
+double MCTS::SimulateQ(STATE& state, QNODE& qnode, int action, int step)
 {
     int observation;
     double immediateReward, delayedReward = 0;
@@ -216,9 +216,9 @@ double MCTS::SimulateQ(STATE& state, QNODE& qnode, int action)
     {
         TreeDepth++;
         if (vnode)
-            delayedReward = SimulateV(state, vnode);
+            delayedReward = SimulateV(state, vnode, step);
         else
-            delayedReward = Rollout(state);
+            delayedReward = Rollout(state, step/*TODO: is step good?*/);
         TreeDepth--;
     }
 
@@ -314,12 +314,12 @@ int MCTS::GreedyUCB(VNODE* vnode, bool ucb) const
     return besta[Random(besta.size())];
 }
 
-double MCTS::Rollout(STATE& state)
+double MCTS::Rollout(STATE& state, int simulationSteps)
 {
     Status.Phase = SIMULATOR::STATUS::ROLLOUT;
     if (Params.Verbose >= 3)
         cout << "Starting rollout" << endl;
-
+    // cout<<"in rollout simulationSteps is "<<simulationSteps<<endl;
     double totalReward = 0.0;
     double discount = 1.0;
     bool terminal = false;
@@ -329,7 +329,7 @@ double MCTS::Rollout(STATE& state)
         int observation;
         double reward;
 
-        int action = Simulator.SelectRandom(state, History, Status); //#Replace by Simple Policy? //Status not being used
+        int action = Simulator.SelectRandom(state, History, Status, simulationSteps); //Status not being used
         terminal = Simulator.Step(state, action, observation, reward);
         History.Add(action, observation);
 
@@ -393,14 +393,13 @@ bool MCTS::InitialisedFastUCB = true;
 
 void MCTS::InitFastUCB(double exploration)
 {
-    cout << "Initialising fast UCB table... ";
+    // cout << "Initialising fast UCB table... ";
     for (int N = 0; N < UCB_N; ++N)
         for (int n = 0; n < UCB_n; ++n)
             if (n == 0)
                 UCB[N][n] = Infinity;
             else
                 UCB[N][n] = exploration * sqrt(log(N + 1) / n);
-    cout << "done" << endl;
     InitialisedFastUCB = true;
 }
 
@@ -542,7 +541,7 @@ void MCTS::UnitTestRollout()
     {
         STATE* state = testSimulator.CreateStartState();
         mcts.TreeDepth = 0;
-        totalReward += mcts.Rollout(*state);
+        totalReward += mcts.Rollout(*state, n);
     }
     double rootValue = totalReward / mcts.Params.NumSimulations;
     double meanValue = testSimulator.MeanValue();

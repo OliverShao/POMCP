@@ -1,5 +1,6 @@
 #include "rocksample.h"
 #include "utils.h"
+#include<map>
 
 using namespace std;
 using namespace UTILS;
@@ -269,7 +270,7 @@ bool ROCKSAMPLE::LocalMove(STATE& state, const HISTORY& history,
 void ROCKSAMPLE::GenerateLegal(const STATE& state, const HISTORY& history,
     vector<int>& legal, const STATUS& status) const
 {
-    cout<<"In generateLegal \n";
+    // cout<<"In generateLegal \n";
     const ROCKSAMPLE_STATE& rockstate =
         safe_cast<const ROCKSAMPLE_STATE&>(state);
 
@@ -296,12 +297,12 @@ void ROCKSAMPLE::GenerateLegal(const STATE& state, const HISTORY& history,
 void ROCKSAMPLE::GeneratePreferred(const STATE& state, const HISTORY& history,
     vector<int>& actions, const STATUS& status) const
 {
-    cout<<"In generatePreferred \n";
+    // cout<<"In generatePreferred \n";
 	static const bool UseBlindPolicy = false;
 
 	if (UseBlindPolicy)
 	{
-        cout<<"Use Blind Policy\n";
+        // cout<<"Use Blind Policy\n";
 		actions.push_back(COORD::E_EAST);
 		return;
 	}
@@ -412,10 +413,96 @@ void ROCKSAMPLE::GeneratePreferred(const STATE& state, const HISTORY& history,
 	}
 }
 
+void ROCKSAMPLE::GenerateSimplePolicy_GoToNearestRock(const STATE& state, const HISTORY& history,
+    vector<int>& actions, const STATUS& status) const
+{
+    // cout<<"in GenerateSimplePolicy_GoToEachRock\n";
+
+    const ROCKSAMPLE_STATE& rockstate =
+	        safe_cast<const ROCKSAMPLE_STATE&>(state);
+
+    // Sample rocks with more +ve than -ve observations
+	int rock = Grid(rockstate.AgentPos); //return -1 if no-rock, otherwise index of rock
+	if (rock >= 0 && !rockstate.Rocks[rock].Collected)
+	{
+		int total = 0;
+		for (int t = 0; t < history.Size(); ++t)
+		{
+			if (history[t].Action == rock + 1 + E_SAMPLE)
+			{
+				if (history[t].Observation == E_GOOD)
+					total++;
+				if (history[t].Observation == E_BAD)
+					total--;
+			}
+		}
+		if (total > 0)
+		{
+			actions.push_back(E_SAMPLE);
+			return;
+		}
+	}
+
+    // Move agent to the most possible valuable rock
+    bool all_bad = true;
+	bool north_interesting = false;
+	bool south_interesting = false;
+	bool west_interesting  = false;
+	bool east_interesting  = false;
+    int highest_total = -1;
+    int highest_rock = -1;
+    map<double/*dis*/, int/*rock*/> distToRock;
+
+	for (int rock = 0; rock < NumRocks; ++rock)
+	{
+		const ROCKSAMPLE_STATE::ENTRY& entry = rockstate.Rocks[rock];
+		if (!entry.Collected)
+		{   
+            
+			double distance = sqrt(pow(RockPos[rock].X - rockstate.AgentPos.X, 2) + 
+                pow(RockPos[rock].Y - rockstate.AgentPos.Y, 2));
+            distToRock[distance] = rock;
+		}
+	}
+
+    if (distToRock.empty())
+    {
+        actions.push_back(COORD::E_EAST);
+        return;
+    }
+
+    double nearestDist = distToRock.begin()->first;
+    int nearestRock = distToRock.begin()->second;
+
+    if (nearestDist <= 2.0) // a threshold
+    {
+        actions.push_back(nearestRock + 1 + E_SAMPLE);
+    } 
+    else { // move to the nearest rock
+        if (abs(RockPos[nearestRock].X - rockstate.AgentPos.X) >
+                abs(RockPos[nearestRock].Y - rockstate.AgentPos.Y)) 
+        {
+            if (RockPos[nearestRock].X > rockstate.AgentPos.X) 
+                actions.push_back(COORD::E_EAST);
+            else 
+                actions.push_back(COORD::E_WEST);            
+        } else {
+            if (RockPos[nearestRock].Y > rockstate.AgentPos.Y) 
+                actions.push_back(COORD::E_SOUTH);
+            else 
+                actions.push_back(COORD::E_NORTH); 
+        }
+    }
+    return;
+}
+
+
+
+
 void ROCKSAMPLE::GenerateSimplePolicy(const STATE& state, const HISTORY& history,
     vector<int>& actions, const STATUS& status) const
 {
-    cout<<"in GenerateSimplePolicy\n";
+    // cout<<"in GenerateSimplePolicy\n";
 
     const ROCKSAMPLE_STATE& rockstate =
 	        safe_cast<const ROCKSAMPLE_STATE&>(state);

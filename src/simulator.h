@@ -101,7 +101,7 @@ public:
     // Use domain knowledge to select actions stochastically during rollouts
     // Should only use fully observable state variables
     int SelectRandom(const STATE& state, const HISTORY& history,
-        const STATUS& status) const;
+        const STATUS& status, int simulationSteps) const;
 
     // Generate set of legal actions
     virtual void GenerateLegal(const STATE& state, const HISTORY& history, 
@@ -111,8 +111,12 @@ public:
     virtual void GeneratePreferred(const STATE& state, const HISTORY& history, 
         std::vector<int>& actions, const STATUS& status) const;
 
-    // Generate set of simple policy chosen actions
+    // Generate set of simple policy actions
     virtual void GenerateSimplePolicy(const STATE& state, const HISTORY& history, 
+        std::vector<int>& actions, const STATUS& status) const;
+
+    // Generate set of Go to each of the rock simple policy actions
+    virtual void GenerateSimplePolicy_GoToNearestRock(const STATE& state, const HISTORY& history, 
         std::vector<int>& actions, const STATUS& status) const;
 
     // For explicit POMDP computation only
