@@ -102,7 +102,7 @@ int SIMULATOR::SelectRandom(const STATE& state, const HISTORY& history,
     if (Knowledge.RolloutLevel >= KNOWLEDGE::SMART)
     {
         actions.clear();
-        Generate_GotoMostPreferred(state, history, actions, status);
+        GeneratePreferred(state, history, actions, status);
         if (!actions.empty()) {
             return actions[Random(actions.size())];
         }
