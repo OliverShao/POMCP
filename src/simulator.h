@@ -111,8 +111,8 @@ public:
     virtual void GeneratePreferred(const STATE& state, const HISTORY& history, 
         std::vector<int>& actions, const STATUS& status) const;
 
-    // Generate set of simple policy actions
-    virtual void GenerateSimplePolicy(const STATE& state, const HISTORY& history, 
+    // Generate smaller set of more preferred actions 
+    virtual void Generate_GotoMostPreferred(const STATE& state, const HISTORY& history, 
         std::vector<int>& actions, const STATUS& status) const;
 
     // Generate set of Go to each of the rock simple policy actions

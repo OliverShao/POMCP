@@ -59,7 +59,7 @@ void SIMULATOR::GeneratePreferred(const STATE& state, const HISTORY& history,
 {
 }
 
-void SIMULATOR::GenerateSimplePolicy(const STATE& state, const HISTORY& history, 
+void SIMULATOR::Generate_GotoMostPreferred(const STATE& state, const HISTORY& history, 
     std::vector<int>& actions, const STATUS& status) const
 {
 }
@@ -73,34 +73,27 @@ int SIMULATOR::SelectRandom(const STATE& state, const HISTORY& history,
     const STATUS& status, const int simulationSteps) const
 {
     static vector<int> actions;
-    //# TODO: Simple Policy 
+    // Multi-Policies
     if (Knowledge.RolloutLevel >= KNOWLEDGE::SIMPLE_POLICY)
     {
         actions.clear();
 
-        int policy = simulationSteps % 2; // NUM_POLICIES
-        // cout<<"simulationSteps is "<<simulationSteps<<endl;
+        int policy = simulationSteps % 3; // NUM_POLICIES
         switch(policy)
         {
             case 0:
-                // cout<<"In selectRandom Generate Preferred\n";
-                GeneratePreferred(state, history, actions, status);
+                GenerateLegal(state, history, actions, status);
                 break;
-            // case 1:
-            //     // cout<<"In selectRandom Generate Simple Policy\n";
-            //     GenerateSimplePolicy(state, history, actions, status);
-            //     break;
             case 1:
+                Generate_GotoMostPreferred(state, history, actions, status);
+                break;
+            case 2:
                 GenerateSimplePolicy_GoToNearestRock(state, history, actions, status);
                 break;
             
         }
         
         if (!actions.empty()) {
-            // cout<< "actions: ";
-            // for (int& action: actions)
-            //     cout<<action<<" ";
-            // cout<<"\n";
             return actions[Random(actions.size())];
         }
     }
@@ -109,20 +102,14 @@ int SIMULATOR::SelectRandom(const STATE& state, const HISTORY& history,
     if (Knowledge.RolloutLevel >= KNOWLEDGE::SMART)
     {
         actions.clear();
-        // cout<<"In selectRandom GeneratePreferred\n";
-        GenerateSimplePolicy_GoToNearestRock(state, history, actions, status);
+        Generate_GotoMostPreferred(state, history, actions, status);
         if (!actions.empty()) {
-            // cout<< "actions: ";
-            // for (int& action: actions)
-            //     cout<<action<<" ";
-            // cout<<"\n";
             return actions[Random(actions.size())];
         }
     }
         
     if (Knowledge.RolloutLevel >= KNOWLEDGE::LEGAL)
     {   
-        // cout<<"In selectRandom Legal\n";
         actions.clear();
         GenerateLegal(state, history, actions, status);
         if (!actions.empty())
@@ -164,7 +151,6 @@ void SIMULATOR::Prior(const STATE* state, const HISTORY& history,
     if (Knowledge.TreeLevel >= KNOWLEDGE::SMART)
     {
         actions.clear();
-        // cout<<"in Prior\n";
         GeneratePreferred(*state, history, actions, status);
 
         for (vector<int>::const_iterator i_action = actions.begin(); i_action != actions.end(); ++i_action)

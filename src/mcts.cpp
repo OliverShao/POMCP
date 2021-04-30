@@ -103,6 +103,7 @@ int MCTS::SelectAction()
 
 void MCTS::RolloutSearch()
 {
+    cout<<"@@in rollout search simulationSteps is "<<endl;
 	std::vector<double> totals(Simulator.GetNumActions(), 0.0);
 	int historyDepth = History.Size();
 	std::vector<int> legal;
@@ -127,7 +128,6 @@ void MCTS::RolloutSearch()
 			AddSample(vnode, *state);
 		}
 		History.Add(action, observation);
-        cout<<"@@in rollout search simulationSteps is "<<i<<endl;
 		delayedReward = Rollout(*state, i);
 		totalReward = immediateReward + Simulator.GetDiscount() * delayedReward;
 		Root->Child(action).Value.Add(totalReward);
