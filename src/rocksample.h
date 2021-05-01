@@ -41,7 +41,7 @@ public:
         std::vector<int>& legal, const STATUS& status) const;
     void GeneratePreferred(const STATE& state, const HISTORY& history,
         std::vector<int>& legal, const STATUS& status) const;
-    void Generate_GotoMostPreferred(const STATE& state, const HISTORY& history,
+    void Generate_GoToMostPreferred(const STATE& state, const HISTORY& history,
         std::vector<int>& legal, const STATUS& status) const;
     void GenerateSimplePolicy_GoToNearestRock(const STATE& state, const HISTORY& history,
         std::vector<int>& legal, const STATUS& status) const;

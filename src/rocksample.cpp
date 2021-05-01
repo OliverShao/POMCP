@@ -414,7 +414,7 @@ void ROCKSAMPLE::GeneratePreferred(const STATE& state, const HISTORY& history,
 }
 
 // Only move toward the most intersting rock 
-void ROCKSAMPLE::Generate_GotoMostPreferred(const STATE& state, const HISTORY& history,
+void ROCKSAMPLE::Generate_GoToMostPreferred(const STATE& state, const HISTORY& history,
     vector<int>& actions, const STATUS& status) const
 {
     const ROCKSAMPLE_STATE& rockstate =

@@ -59,7 +59,7 @@ void SIMULATOR::GeneratePreferred(const STATE& state, const HISTORY& history,
 {
 }
 
-void SIMULATOR::Generate_GotoMostPreferred(const STATE& state, const HISTORY& history, 
+void SIMULATOR::Generate_GoToMostPreferred(const STATE& state, const HISTORY& history, 
     std::vector<int>& actions, const STATUS& status) const
 {
 }
@@ -85,7 +85,7 @@ int SIMULATOR::SelectRandom(const STATE& state, const HISTORY& history,
                 GenerateLegal(state, history, actions, status);
                 break;
             case 1:
-                Generate_GotoMostPreferred(state, history, actions, status);
+                Generate_GoToMostPreferred(state, history, actions, status);
                 break;
             case 2:
                 GenerateSimplePolicy_GoToNearestRock(state, history, actions, status);
